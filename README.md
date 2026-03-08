@@ -1,77 +1,110 @@
-# Space Weather Forecast SDN Plugin
+# Space Weather Forecast WASM Parser
 
-SDN (Space Data Network) plugin for publishing NOAA SWPC 45-Day Ap and F10.7cm Flux Forecast data.
+WebAssembly-based parser for NOAA SWPC 45-Day Ap and F10.7cm Flux Forecast data.
 
 ## Overview
 
-This plugin fetches, processes, and publishes space weather forecast data to the Space Data Network.
+This WASM module parses NOAA space weather forecast text format and converts it to FlatBuffers for Space Data Network integration.
 
 ## Features
 
-- Fetch NOAA SWPC 45-day forecast data
-- Convert to FlatBuffers format using SDS schema
-- Sign data with Ed25519 for cryptographic verification
-- Publish to SDN network (IPFS/libp2p)
-- Support for both Ap and F10.7 flux forecasts
+- **WASM-based**: Compiles to WebAssembly for browser and Node.js compatibility
+- **Noah Text Parsing**: Parses NOAA SWPC text format to structured data
+- **FlatBuffers Serialization**: Converts to FlatBuffers binary format
+- **Cross-platform**: Works in browser and Node.js environments
+- **Space Data Network Ready**: Compatible with SDN for decentralized publishing
 
 ## Installation
 
 ```bash
 npm install spacedatastandards.org
+npm install -g emscripten
 ```
+
+## Building
+
+```bash
+# Navigate to wasm directory
+cd wasm
+
+# Build WASM module
+bash build.sh
+```
+
+This will generate:
+- `dist/swfp_parser.js` - WASM module and JavaScript wrapper
+- `dist/swfp_parser.wasm` - Raw WebAssembly binary
 
 ## Usage
 
+### Node.js
+
 ```javascript
-import { SWFPlugin } from './sdn-plugin';
+const { SpaceWeatherForecastWASM } = require('./wasm/node');
 
-const plugin = new SWFPlugin({
-  privateKey: 'your-ed25519-private-key',
-  gatewayUrl: 'https://gateway.space-data-network.org',
-  gatewayToken: 'your-gateway-token'
-});
+const parser = new SpaceWeatherForecastWASM();
 
-// Fetch and publish forecast
-await plugin.publishForecast();
+(async () => {
+    await parser.init();
+
+    // Parse NOAA forecast
+    const forecast = await parser.parseNOAAForecast(noaaText);
+
+    // Get metadata
+    const metadata = await parser.getMetadata(noaaText);
+
+    // Get statistics
+    const stats = await parser.getStatistics(noaaText);
+})();
 ```
 
-## Configuration
+### Browser
 
-```javascript
-{
-  privateKey: string,           // Ed25519 private key for signing
-  gatewayUrl: string,           // SDN gateway URL
-  gatewayToken: string,         // Authentication token
-  cacheDuration: number,        // Cache duration in hours (default: 24)
-  autoPublish: boolean          // Auto-publish on fetch (default: true)
-}
+```html
+<script type="module">
+    import { SpaceWeatherForecastWASM } from './wasm/node/index.js';
+
+    const parser = new SpaceWeatherForecastWASM();
+    await parser.init();
+
+    const forecast = await parser.parseNOAAForecast(noaaText);
+    console.log('Forecast:', forecast);
+</script>
 ```
 
 ## Data Flow
 
-1. Fetch forecast from NOAA SWPC (daily at 0000 UTC)
-2. Parse text format to JSON structure
-3. Validate against SDS schema
-4. Serialize to FlatBuffers binary
-5. Sign with Ed25519 private key
-6. Publish to SDN network
-7. Store IPFS CID for retrieval
+1. **Parse NOAA Text**: C++ parses NOAA SWPC text format
+2. **Build FlatBuffers**: C++ constructs FlatBuffers structure
+3. **Export to WASM**: Compiles to WebAssembly module
+4. **Import in JS**: JavaScript loads and uses the WASM module
+5. **Serialize**: Convert to FlatBuffers binary for SDN
+6. **Publish**: Upload to Space Data Network
 
-## Schema Mapping
+## Schema
 
-- **Product ID**: `product_id`
-- **Issued Date**: `issued` / `issued_utc`
-- **Ap Forecast**: `ap_forecast` array
-- **F107 Forecast**: `f107_forecast` array
-- **Current Values**: `ap_current`, `f107_current`
-- **Trends**: `ap_trend`, `f107_trend`
+Uses FlatBuffers schema `swf-schema.fbs` for Space Weather Forecast data.
 
-## SDN Integration
+## C++ Structure
 
-This plugin integrates with the Space Data Network as a:
-- **Publisher**: Pushes forecast data to subscribed nodes
-- **Subscriber**: Can receive forecast data from other publishers
-- **Relay**: Forwards forecasts to regional SDN nodes
+```
+wasm/
+├── src/
+│   ├── swf_parser.cpp    // WASM export functions
+│   ├── parse.cpp          // NOAA text parser
+│   └── parse.hpp          // Parser header
+├── include/               // FlatBuffers headers (auto-generated)
+├── build.sh               # Build script
+├── CMakeLists.txt         # CMake build configuration
+└── node/
+    └── index.js           # Node.js wrapper
+```
+
+## Building Requirements
+
+- **Emscripten**: Compile C++ to WASM
+- **FlatBuffers**: Schema definitions
+- **Node.js**: Runtime (for testing)
 
 ## License
 
