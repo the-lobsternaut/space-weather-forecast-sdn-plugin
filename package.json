@@ -1,0 +1,54 @@
+{
+  "name": "space-weather-forecast-sdn-plugin",
+  "version": "1.0.0",
+  "description": "SDN plugin for publishing NOAA SWPC space weather forecast data",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:wasm": "npm run build:flatc && npm run build:wasm:flatc",
+    "build:flatc": "cd ../node_modules/flatc-wasm && npm install",
+    "build:wasm:flatc": "cd ../node_modules/flatc-wasm && npm run build",
+    "test": "node test.js",
+    "publish": "npm run build && npm publish",
+    "example": "node example.js"
+  },
+  "keywords": [
+    "space-data-network",
+    "sdn",
+    "space-weather",
+    "forecast",
+    "NOAA",
+    "SWPC",
+    "ap",
+    "f107",
+    "flatbuffers"
+  ],
+  "author": "DigitalArsenal",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@noble/ed25519": "^2.0.0",
+    "js-sha256": "^0.11.0",
+    "spacedatastandards.org": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "spacedatastandards.org": "^1.0.0"
+  },
+  "files": [
+    "dist",
+    "src",
+    "schemas",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DigitalArsenal/space-weather-forecast-sdn-plugin.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
