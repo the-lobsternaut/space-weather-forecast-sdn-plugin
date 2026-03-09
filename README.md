@@ -1,110 +1,91 @@
-# Space Weather Forecast WASM Parser
+# NOAA SWPC 45-Day Forecast → SDN Plugin
 
-WebAssembly-based parser for NOAA SWPC 45-Day Ap and F10.7cm Flux Forecast data.
+C++ WASM parser for the NOAA Space Weather Prediction Center 45-Day Ap and F10.7cm Flux Forecast. Converts between NOAA text format and JSON, with output compatible with the [SPW schema](https://spacedatastandards.org/#/schema/SPW) from [spacedatastandards.org](https://spacedatastandards.org).
 
-## Overview
+## What It Does
 
-This WASM module parses NOAA space weather forecast text format and converts it to FlatBuffers for Space Data Network integration.
+Parses the [45-Day Ap and F10.7cm Flux Forecast](https://www.spaceweather.gov/products/45-day-forecast) product from NOAA SWPC and converts it to SPW-compatible JSON for publishing on the Space Data Network.
 
-## Features
+## Architecture
 
-- **WASM-based**: Compiles to WebAssembly for browser and Node.js compatibility
-- **Noah Text Parsing**: Parses NOAA SWPC text format to structured data
-- **FlatBuffers Serialization**: Converts to FlatBuffers binary format
-- **Cross-platform**: Works in browser and Node.js environments
-- **Space Data Network Ready**: Compatible with SDN for decentralized publishing
-
-## Installation
-
-```bash
-npm install spacedatastandards.org
-npm install -g emscripten
+```
+src/cpp/
+├── include/swpc/
+│   └── forecast_parser.h      # Parser API
+├── src/
+│   └── forecast_parser.cpp    # Text/JSON parser + writer
+├── tests/
+│   └── test_roundtrip.cpp     # Round-trip tests
+├── wasm_api.cpp               # Emscripten bindings
+└── CMakeLists.txt             # Build config
+wasm/node/
+├── index.mjs                  # Node.js wrapper
+├── swpc_forecast.js           # Emscripten glue (generated)
+└── swpc_forecast.wasm         # WASM binary (generated)
 ```
 
 ## Building
 
-```bash
-# Navigate to wasm directory
-cd wasm
+Requires [Emscripten](https://emscripten.org/):
 
-# Build WASM module
-bash build.sh
+```bash
+cd src/cpp
+mkdir build && cd build
+emcmake cmake ..
+emmake make
 ```
 
-This will generate:
-- `dist/swfp_parser.js` - WASM module and JavaScript wrapper
-- `dist/swfp_parser.wasm` - Raw WebAssembly binary
+### Native build (for testing):
+
+```bash
+cd src/cpp
+mkdir build && cd build
+cmake ..
+make
+./swpc_forecast_test
+```
 
 ## Usage
 
-### Node.js
+### Node.js (WASM)
 
 ```javascript
-const { SpaceWeatherForecastWASM } = require('./wasm/node');
+import { init } from './wasm/node/index.mjs';
 
-const parser = new SpaceWeatherForecastWASM();
+const sds = await init();
 
-(async () => {
-    await parser.init();
+// Convert NOAA text format to JSON
+const json = sds.convert(noaaTextInput, 'json');
 
-    // Parse NOAA forecast
-    const forecast = await parser.parseNOAAForecast(noaaText);
+// Convert JSON back to text
+const text = sds.convert(jsonInput, 'text');
 
-    // Get metadata
-    const metadata = await parser.getMetadata(noaaText);
+// Auto-detect format
+sds.detectFormat(input);  // 'text' or 'json'
 
-    // Get statistics
-    const stats = await parser.getStatistics(noaaText);
-})();
+// Direct functions
+sds.swpcTextToJson(textInput);
+sds.swpcJsonToText(jsonInput);
+sds.swpcTextRoundtrip(textInput);
+sds.swpcJsonRoundtrip(jsonInput);
 ```
 
-### Browser
+## SPW Schema Compatibility
 
-```html
-<script type="module">
-    import { SpaceWeatherForecastWASM } from './wasm/node/index.js';
+Output JSON uses field names from the [SPW (Space Weather Data Record)](https://spacedatastandards.org/#/schema/SPW) schema:
 
-    const parser = new SpaceWeatherForecastWASM();
-    await parser.init();
+| SPW Field | Description |
+|-----------|-------------|
+| `DATE` | ISO 8601 date |
+| `AP_AVG` | Daily Ap index (predicted) |
+| `F107_OBS` | F10.7cm solar radio flux (predicted) |
+| `F107_DATA_TYPE` | `PRD` (45-day predicted) |
 
-    const forecast = await parser.parseNOAAForecast(noaaText);
-    console.log('Forecast:', forecast);
-</script>
-```
+## Data Source
 
-## Data Flow
-
-1. **Parse NOAA Text**: C++ parses NOAA SWPC text format
-2. **Build FlatBuffers**: C++ constructs FlatBuffers structure
-3. **Export to WASM**: Compiles to WebAssembly module
-4. **Import in JS**: JavaScript loads and uses the WASM module
-5. **Serialize**: Convert to FlatBuffers binary for SDN
-6. **Publish**: Upload to Space Data Network
-
-## Schema
-
-Uses FlatBuffers schema `swf-schema.fbs` for Space Weather Forecast data.
-
-## C++ Structure
-
-```
-wasm/
-├── src/
-│   ├── swf_parser.cpp    // WASM export functions
-│   ├── parse.cpp          // NOAA text parser
-│   └── parse.hpp          // Parser header
-├── include/               // FlatBuffers headers (auto-generated)
-├── build.sh               # Build script
-├── CMakeLists.txt         # CMake build configuration
-└── node/
-    └── index.js           # Node.js wrapper
-```
-
-## Building Requirements
-
-- **Emscripten**: Compile C++ to WASM
-- **FlatBuffers**: Schema definitions
-- **Node.js**: Runtime (for testing)
+- **Product**: [45-Day Ap and F10.7cm Flux Forecast](https://www.spaceweather.gov/products/45-day-forecast)
+- **Provider**: NOAA Space Weather Prediction Center
+- **Update Frequency**: Daily at 0000 UTC
 
 ## License
 
