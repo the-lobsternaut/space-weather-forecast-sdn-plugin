@@ -1,6 +1,13 @@
 /**
  * SWPC Forecast WASM Parser - Node.js wrapper
- * Follows spacedatastandards.org/wasm/node/index.mjs pattern
+ * Follows spacedatastandards.org/wasm/node pattern
+ *
+ * Provides:
+ *   - toFlatBuffers(text) → aligned FlatBuffers $SPW binary
+ *   - textToFlatBuffers(text) → aligned FlatBuffers $SPW binary
+ *   - jsonToFlatBuffers(json) → aligned FlatBuffers $SPW binary
+ *   - convert(input, targetFormat) → text/json round-trips
+ *   - parse(ptr, len, outPtr, outLen) → C ABI for SDN plugin system
  */
 
 import { createRequire } from 'module';

@@ -1,0 +1,1 @@
+-I"/Users/lobsternaut/.openclaw/workspace/space-weather-forecast-sdn-plugin/src/cpp/include" -I"/Users/lobsternaut/software/space-data-network-project/packages/flatbuffers/include" -I"/Users/lobsternaut/software/space-data-network-project/packages/spacedatastandards.org/lib/cpp/SPW"
