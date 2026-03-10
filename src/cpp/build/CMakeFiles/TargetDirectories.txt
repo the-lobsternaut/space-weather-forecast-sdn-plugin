@@ -1,3 +1,0 @@
-/Users/lobsternaut/.openclaw/workspace/space-weather-forecast-sdn-plugin/src/cpp/build/CMakeFiles/swpc_forecast.dir
-/Users/lobsternaut/.openclaw/workspace/space-weather-forecast-sdn-plugin/src/cpp/build/CMakeFiles/edit_cache.dir
-/Users/lobsternaut/.openclaw/workspace/space-weather-forecast-sdn-plugin/src/cpp/build/CMakeFiles/rebuild_cache.dir

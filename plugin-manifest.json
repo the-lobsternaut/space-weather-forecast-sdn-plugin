@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "pluginType": "data-retrieval",
+  "pluginId": "space-weather-forecast",
+  "pluginName": "SWPC 45-Day Space Weather Forecast",
+  "pluginVersion": "1.0.0",
+  "vendorId": "the-lobsternaut",
+  "contact": "https://github.com/the-lobsternaut",
+  "description": "Converts NOAA SWPC 45-day AP and F10.7 forecasts into spacedatastandards.org SPW FlatBuffers aligned binary",
+  "capabilities": [
+    "data.ingest",
+    "data.convert"
+  ],
+  "dataSource": {
+    "url": "https://services.swpc.noaa.gov/text/45-day-ap-forecast.txt",
+    "format": "text",
+    "refreshInterval": "6h"
+  },
+  "schema": {
+    "code": "SPW",
+    "fileIdentifier": "$SPW",
+    "outputType": "SPWCOLLECTION"
+  },
+  "wasm": {
+    "module": "swpc_forecast",
+    "exports": {
+      "c_abi": ["parse", "convert", "malloc", "free"],
+      "embind": ["toFlatBuffers", "textToFlatBuffers", "jsonToFlatBuffers", "convert", "detectFormat"]
+    }
+  },
+  "metadata": {
+    "category": "environment",
+    "dataTypes": ["space-weather", "ap-index", "f10.7-flux"],
+    "standards": ["spacedatastandards.org/SPW"],
+    "tags": ["noaa", "swpc", "space-weather", "ap", "f10.7", "geomagnetic", "solar-flux"]
+  }
+}

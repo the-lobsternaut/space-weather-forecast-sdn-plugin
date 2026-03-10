@@ -1,7 +1,4 @@
 node_modules/
-dist/
-cache/
+src/cpp/build/
+.DS_Store
 *.log
-.env
-keypair.hex
-*.tsbuildinfo

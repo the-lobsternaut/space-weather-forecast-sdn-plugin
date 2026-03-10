@@ -4,22 +4,36 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # ============================================================================
-# Paths to spacedatastandards.org monorepo dependencies
+# Locate spacedatastandards.org dependencies
 # ============================================================================
 
-# FlatBuffers C++ headers
-set(SDS_PROJECT_ROOT "${CMAKE_SOURCE_DIR}/../../../../software/space-data-network-project")
-
-# Allow override via environment or CMake variable
-if(DEFINED ENV{SDS_PROJECT_ROOT})
-    set(SDS_PROJECT_ROOT "$ENV{SDS_PROJECT_ROOT}")
+# SDS_ROOT can be passed via -DSDS_ROOT=... or environment
+if(NOT DEFINED SDS_ROOT)
+    if(DEFINED ENV{SDS_ROOT})
+        set(SDS_ROOT "$ENV{SDS_ROOT}")
+    else()
+        # Search common locations
+        foreach(_candidate
+            "${CMAKE_SOURCE_DIR}/../../../../space-data-network-project"
+            "$ENV{HOME}/software/space-data-network-project"
+        )
+            if(EXISTS "${_candidate}/packages/flatbuffers/include")
+                get_filename_component(SDS_ROOT "${_candidate}" ABSOLUTE)
+                break()
+            endif()
+        endforeach()
+    endif()
 endif()
-if(DEFINED SDS_ROOT)
-    set(SDS_PROJECT_ROOT "${SDS_ROOT}")
-endif()
 
-set(FLATBUFFERS_INCLUDE "${SDS_PROJECT_ROOT}/packages/flatbuffers/include")
-set(SPW_GENERATED "${SDS_PROJECT_ROOT}/packages/spacedatastandards.org/lib/cpp/SPW")
+if(SDS_ROOT)
+    message(STATUS "SDS_ROOT: ${SDS_ROOT}")
+    set(FLATBUFFERS_INCLUDE "${SDS_ROOT}/packages/flatbuffers/include")
+    set(SPW_GENERATED "${SDS_ROOT}/packages/spacedatastandards.org/lib/cpp/SPW")
+else()
+    message(WARNING "SDS_ROOT not found. FlatBuffers headers may be missing. Pass -DSDS_ROOT=<path>")
+    set(FLATBUFFERS_INCLUDE "")
+    set(SPW_GENERATED "")
+endif()
 
 # ============================================================================
 # Source files
@@ -30,10 +44,13 @@ set(SOURCES
     wasm_api.cpp
 )
 
-# Include directories
 include_directories(include)
-include_directories(${FLATBUFFERS_INCLUDE})
-include_directories(${SPW_GENERATED})
+if(FLATBUFFERS_INCLUDE)
+    include_directories(${FLATBUFFERS_INCLUDE})
+endif()
+if(SPW_GENERATED)
+    include_directories(${SPW_GENERATED})
+endif()
 
 # ============================================================================
 # Emscripten WASM build
@@ -57,9 +74,6 @@ if(EMSCRIPTEN)
             --bind \
             -O2 \
         "
-    )
-    # Output to wasm/node/
-    set_target_properties(swpc_forecast PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../wasm/node"
     )
 
@@ -71,7 +85,6 @@ else()
     add_library(swpc_forecast_lib STATIC ${SOURCES})
     target_include_directories(swpc_forecast_lib PUBLIC include)
 
-    # Test executable
     add_executable(swpc_forecast_test tests/test_roundtrip.cpp)
     target_link_libraries(swpc_forecast_test swpc_forecast_lib)
     target_include_directories(swpc_forecast_test PRIVATE include)

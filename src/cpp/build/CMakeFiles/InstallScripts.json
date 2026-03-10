@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"/Users/lobsternaut/.openclaw/workspace/space-weather-forecast-sdn-plugin/src/cpp/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
